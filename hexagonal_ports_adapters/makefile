@@ -2,20 +2,34 @@ DB_DSN := postgresql://postgres:example@localhost:5432/database?sslmode=disable
 JET_OUT := ./adapter/output
 JET_TMP := ./jetgen
 
+run:
+	@echo "==> (1/1) Iniciando servidor..."
+	@go run main.go
+
+docker-run:
+	@echo "==> (1/1) Iniciando banco de dados"
+	@docker compose up -d
+
+docker-down:
+	@echo "==> (1/1) Desligando banco de dados"
+	@docker compose down
+
 jet:
-	@echo "→ Limpando geração anterior..."
-	rm -rf $(JET_TMP)
+	@echo "==> (1/5) Limpando geração anterior..."
+	@rm -rf $(JET_TMP)
 
-	@echo "→ Gerando código Jet..."
-	jet -dsn="$(DB_DSN)" -path=$(JET_TMP)
+	@echo "==> (2/5) Gerando código Jet..."
+	@jet -dsn="$(DB_DSN)" -ignore-tables=schema_migrations -path=$(JET_TMP)
 
-	@echo "→ Criando pasta final..."
-	mkdir -p $(JET_OUT)
+	@echo "==> (3/5) Criando pasta final..."
+	@mkdir -p $(JET_OUT)
 
-	@echo "→ Movendo apenas conteúdo dentro de public/..."
-	mv $(JET_TMP)/*/public/* $(JET_OUT)/
+	@echo "==> (4/5) Movendo apenas conteúdo dentro de public/..."
+	@cp -R $(JET_TMP)/*/public/* $(JET_OUT)/
 
-	@echo "→ Removendo pasta temporária..."
-	rm -rf $(JET_TMP)
+	@echo "==> (5/5) Removendo pasta temporária..."
+	@rm -rf $(JET_TMP)
 
-	@echo "✔ Jet gerado com sucesso!"
+migrate-up:
+	@migrate -database "$(DB_DSN)" -path ./migrations up
+
