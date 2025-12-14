@@ -8,6 +8,7 @@ import (
 	"golang_hexagonal_architecture/application/service"
 	"golang_hexagonal_architecture/configuration/logger"
 	"net/http"
+	"os"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/joho/godotenv"
@@ -22,7 +23,7 @@ func main() {
 		return
 	}
 
-	database, err := pgx.Connect(context.Background(), "postgresql://postgres:example@localhost:5432/database?sslmode=disable")
+	database, err := pgx.Connect(context.Background(), os.Getenv("DB_URI"))
 	if err != nil {
 		return
 	}

@@ -1,6 +1,15 @@
+.PHONY: start
+
 DB_DSN := postgresql://postgres:example@localhost:5432/database?sslmode=disable
 JET_OUT := ./adapter/output
 JET_TMP := ./jetgen
+
+start:
+	@$(MAKE) --no-print-directory docker-run
+	@$(MAKE) --no-print-directory wait-db
+	@$(MAKE) --no-print-directory migrate-up
+	@$(MAKE) --no-print-directory jet
+	@$(MAKE) --no-print-directory run
 
 run:
 	@echo "==> (1/1) Iniciando servidor..."
@@ -33,3 +42,9 @@ jet:
 migrate-up:
 	@migrate -database "$(DB_DSN)" -path ./migrations up
 
+wait-db:
+	@echo "==> (1/2) Aguardando Postgres ficar pronto..."
+	@until docker inspect --format='{{.State.Health.Status}}' postgres 2>/dev/null | grep -q healthy; do \
+		sleep 1; \
+	done
+	@echo "==> (2/2) Postres pronto"
